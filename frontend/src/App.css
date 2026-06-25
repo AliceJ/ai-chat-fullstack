@@ -29,6 +29,14 @@ body {
   text-align: center;
 }
 
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  position: relative;
+}
+
 .header h1 {
   font-size: 1.4rem;
   font-weight: 600;
@@ -39,6 +47,68 @@ body {
   font-size: 0.8rem;
   color: #888;
   margin-top: 4px;
+}
+
+.upload-btn {
+  position: absolute;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: #888;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.upload-btn:hover {
+  background: #2a2a2a;
+  color: #fff;
+  border-color: #3b82f6;
+}
+
+.upload-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0 0;
+}
+
+.upload-file-btn {
+  padding: 8px 16px;
+  border: 1px dashed #3b82f6;
+  border-radius: 8px;
+  background: transparent;
+  color: #3b82f6;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.upload-file-btn:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.upload-file-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.upload-msg {
+  font-size: 0.8rem;
+}
+
+.upload-msg.success {
+  color: #10b981;
+}
+
+.upload-msg.error {
+  color: #ef4444;
 }
 
 .chat-container {
@@ -53,16 +123,30 @@ body {
 .empty-state {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   color: #555;
   font-size: 1.1rem;
+  gap: 8px;
+}
+
+.empty-hint {
+  font-size: 0.8rem;
+  color: #444;
 }
 
 .message {
   display: flex;
   gap: 12px;
   max-width: 85%;
+}
+
+.message-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
 }
 
 .message.user {
@@ -167,4 +251,68 @@ body {
 .input-form button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Sources */
+.sources-section {
+  width: 100%;
+}
+
+.sources-toggle {
+  padding: 4px 10px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: transparent;
+  color: #888;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sources-toggle:hover {
+  background: #1a1a1a;
+  color: #aaa;
+  border-color: #555;
+}
+
+.sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.source-card {
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #141414;
+}
+
+.source-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.source-filename {
+  font-size: 0.75rem;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.source-score {
+  font-size: 0.7rem;
+  color: #10b981;
+}
+
+.source-content {
+  font-size: 0.8rem;
+  color: #aaa;
+  line-height: 1.5;
+  max-height: 120px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
