@@ -14,6 +14,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { initDB, insertDocument, insertChunks, searchSimilar, deleteDocumentsByFilename } from './db.js';
 import { embedText, embedBatch } from './embeddings.js';
+import { runAgent } from './agent.js';
 
 const app = Fastify({ logger: true });
 
@@ -175,6 +176,32 @@ app.get('/api/health', async () => ({
   status: 'ok',
   model: MODEL,
 }));
+
+// ============================================================
+// POST /api/agent — Agent 模式: 工具调用循环
+// 流程: 用户消息 → LLM 判断是否需要工具 → 执行工具 → 追加结果 → 再请求 LLM → 循环最多 3 轮
+// ============================================================
+app.post('/api/agent', async (request, reply) => {
+  const { messages } = request.body;
+
+  if (!messages || !Array.isArray(messages)) {
+    return reply.code(400).send({ error: 'messages array is required' });
+  }
+
+  try {
+    const { finalContent, steps } = await runAgent({
+      messages,
+      apiKey: process.env.DEEPSEEK_API_KEY,
+      baseURL: process.env.DEEPSEEK_BASE_URL || 'http://model.mify.ai.srv/v1/',
+      model: MODEL,
+    });
+
+    return { finalContent, steps };
+  } catch (err) {
+    app.log.error({ err }, 'Agent loop failed');
+    return reply.code(500).send({ error: err.message });
+  }
+});
 
 const PORT = process.env.PORT || 3001;
 

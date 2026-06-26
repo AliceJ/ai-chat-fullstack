@@ -50,8 +50,6 @@ body {
 }
 
 .upload-btn {
-  position: absolute;
-  right: 0;
   width: 32px;
   height: 32px;
   border-radius: 8px;
@@ -315,4 +313,148 @@ body {
   overflow-y: auto;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* ---- Header actions ---- */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: absolute;
+  right: 0;
+}
+
+.mode-toggle {
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: #888;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-toggle:hover {
+  background: #2a2a2a;
+  color: #fff;
+}
+
+.mode-toggle.agent {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.mode-toggle.chat {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+/* ---- Thinking card ---- */
+.thinking-card {
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 10px 14px;
+  max-width: 85%;
+  margin: 4px 0;
+}
+
+.thinking-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.thinking-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f59e0b;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.thinking-content {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: #aaa;
+  line-height: 1.4;
+}
+
+/* ---- Tool card ---- */
+.tool-card {
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-left: 3px solid #8b5cf6;
+  border-radius: 8px;
+  padding: 12px 14px;
+  max-width: 85%;
+  margin: 4px 0;
+}
+
+.tool-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tool-icon {
+  font-size: 1rem;
+}
+
+.tool-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #a78bfa;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.tool-round {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: #555;
+  background: #161b22;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.tool-card-section {
+  margin-top: 6px;
+}
+
+.tool-label {
+  font-size: 0.7rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.tool-json {
+  font-size: 0.78rem;
+  color: #c9d1d9;
+  background: #161b22;
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin: 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  line-height: 1.5;
+}
+
+/* ---- Error message ---- */
+.content.error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
 }
