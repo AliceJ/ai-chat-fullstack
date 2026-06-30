@@ -1,6 +1,7 @@
 /**
  * OpenAI Function Calling 标准工具定义 + Agent 循环
  */
+import { callWithRetry } from './llm-utils.js';
 
 // ============================================================
 // 工具定义 — 遵循 OpenAI Function Calling 规范
@@ -68,27 +69,27 @@ export async function runAgent({ messages, apiKey, baseURL, model }) {
   const MAX_ROUNDS = 3;
 
   for (let round = 1; round <= MAX_ROUNDS; round++) {
-    // 请求 LLM，带上 tools 定义
-    const response = await fetch(`${baseURL}chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: conversation,
-        tools,
-        tool_choice: 'auto',
-      }),
+    // 请求 LLM，带上 tools 定义（带指数退避重试）
+    const { data } = await callWithRetry(async () => {
+      const response = await fetch(`${baseURL}chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: conversation,
+          tools,
+          tool_choice: 'auto',
+        }),
+      });
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`LLM API error ${response.status}: ${err}`);
+      }
+      return { data: await response.json() };
     });
-
-    if (!response.ok) {
-      const err = await response.text();
-      throw new Error(`LLM API error ${response.status}: ${err}`);
-    }
-
-    const data = await response.json();
     const assistantMsg = data.choices[0].message;
 
     // 记录本轮 assistant 思考
@@ -141,17 +142,22 @@ export async function runAgent({ messages, apiKey, baseURL, model }) {
     }
   }
 
-  // 达到最大轮次，不带 tools 再请求一次获取最终回答
-  const finalResp = await fetch(`${baseURL}chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({ model, messages: conversation }),
+  // 达到最大轮次，不带 tools 再请求一次获取最终回答（带重试）
+  const { data: finalData } = await callWithRetry(async () => {
+    const finalResp = await fetch(`${baseURL}chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({ model, messages: conversation }),
+    });
+    if (!finalResp.ok) {
+      const err = await finalResp.text();
+      throw new Error(`LLM API error ${finalResp.status}: ${err}`);
+    }
+    return { data: await finalResp.json() };
   });
-
-  const finalData = await finalResp.json();
   const finalContent = finalData.choices[0].message.content;
   steps.push({ type: 'final', round: MAX_ROUNDS + 1, content: finalContent });
 

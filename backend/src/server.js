@@ -15,6 +15,7 @@ import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { initDB, insertDocument, insertChunks, searchSimilar, deleteDocumentsByFilename } from './db.js';
 import { embedText, embedBatch } from './embeddings.js';
 import { runAgent } from './agent.js';
+import { callWithRetry, compressConversation } from './llm-utils.js';
 
 const app = Fastify({ logger: true });
 
@@ -135,6 +136,25 @@ app.post('/api/chat', async (request, reply) => {
 
   const fullMessages = systemMessage ? [systemMessage, ...messages] : messages;
 
+  // 对话历史压缩：超过 4000 token 时自动总结早期轮次
+  const compressedMessages = await compressConversation(fullMessages, {
+    llmCaller: async (msgs) => {
+      const result = await callWithRetry(async () => {
+        const resp = await fetch(`${process.env.DEEPSEEK_BASE_URL || 'http://model.mify.ai.srv/v1/'}chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+          },
+          body: JSON.stringify({ model: MODEL, messages: msgs }),
+        });
+        if (!resp.ok) throw new Error(`LLM API error ${resp.status}`);
+        return resp.json();
+      });
+      return { content: result.choices[0].message.content };
+    },
+  });
+
   // 使用 Vercel AI SDK 的 StreamData 机制, 将 sources 作为 annotation 随流式回复一起发送
   // 前端通过 msg.annotations 读取, 无需额外请求
   const data = new StreamData();
@@ -153,7 +173,7 @@ app.post('/api/chat', async (request, reply) => {
 
   const result = streamText({
     model: openai(MODEL),
-    messages: fullMessages,
+    messages: compressedMessages,
     // 流式回复结束后关闭 StreamData, 确保 annotation 数据完整发送
     onFinish() {
       data.close();
@@ -189,8 +209,27 @@ app.post('/api/agent', async (request, reply) => {
   }
 
   try {
+    // 对话历史压缩：超过 4000 token 时自动总结早期轮次
+    const compressed = await compressConversation(messages, {
+      llmCaller: async (msgs) => {
+        const result = await callWithRetry(async () => {
+          const resp = await fetch(`${process.env.DEEPSEEK_BASE_URL || 'http://model.mify.ai.srv/v1/'}chat/completions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+            },
+            body: JSON.stringify({ model: MODEL, messages: msgs }),
+          });
+          if (!resp.ok) throw new Error(`LLM API error ${resp.status}`);
+          return resp.json();
+        });
+        return { content: result.choices[0].message.content };
+      },
+    });
+
     const { finalContent, steps } = await runAgent({
-      messages,
+      messages: compressed,
       apiKey: process.env.DEEPSEEK_API_KEY,
       baseURL: process.env.DEEPSEEK_BASE_URL || 'http://model.mify.ai.srv/v1/',
       model: MODEL,
